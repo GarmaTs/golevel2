@@ -18,15 +18,18 @@ type Game struct {
 	gameField          [][]string
 	isFirstPlayerMoves bool
 	resultTable        map[string]int
+	isVersusAI         bool
+	aiPlayer           AIPlayer
 }
 
 func (game *Game) initResultTable() {
 	game.resultTable = make(map[string]int)
 }
 
-func (game *Game) init(size int) {
+func (game *Game) init(size int, isVSAI bool) {
 	game.isFirstPlayerMoves = true
 	game.size = size
+	game.isVersusAI = isVSAI
 
 	game.gameField = make([][]string, game.size)
 	for i := range game.gameField {
@@ -35,15 +38,22 @@ func (game *Game) init(size int) {
 }
 
 func (game Game) Run(pl common.IPlayer, deliv common.IUserInteract) {
+	isVSAI := deliv.IsVersusAI()
 	size := deliv.SetFieldSize()
 	game.initResultTable()
-	game.init(size)
+	game.init(size, isVSAI)
 
 	for {
-		i, j := deliv.GetUserMove(game.isFirstPlayerMoves)
-		if err := game.isCorrectMove(i, j); err != nil {
-			deliv.ShowError(err)
-			continue
+		var i, j int
+		if !game.isVersusAI || game.isFirstPlayerMoves {
+			i, j = deliv.GetUserMove(game.isFirstPlayerMoves, game.isVersusAI)
+			if err := game.isCorrectMove(i, j); err != nil {
+				deliv.ShowError(err)
+				continue
+			}
+		} else {
+			i, j = game.aiPlayer.MakeMove(game.gameField, game.size, SECOND_PLAYER_VAL)
+			deliv.ShowMessage("Ход комьютера:")
 		}
 
 		if game.isFirstPlayerMoves {
@@ -71,8 +81,9 @@ func (game Game) Run(pl common.IPlayer, deliv common.IUserInteract) {
 			if !startAgain {
 				break
 			} else {
+				isVSAI := deliv.IsVersusAI()
 				size := deliv.SetFieldSize()
-				game.init(size)
+				game.init(size, isVSAI)
 				continue
 			}
 		}

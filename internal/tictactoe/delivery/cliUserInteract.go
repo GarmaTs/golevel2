@@ -5,15 +5,19 @@ import "fmt"
 type CliUserInteract struct {
 }
 
-func (cli CliUserInteract) GetUserMove(isFirstPlayer bool) (int, int) {
+func (cli CliUserInteract) GetUserMove(isFirstPlayer bool, isVersusAI bool) (int, int) {
 	var rowIdx, colIdx int
 	playerNum := "Первый"
 	if !isFirstPlayer {
 		playerNum = "Второй"
 	}
 	for {
-		fmt.Printf("%s игрок, введите номер строки "+
-			"и номер столбца (начиная с нуля): ", playerNum)
+		if isVersusAI {
+			fmt.Printf("Игрок, введите номер строки и номер столбца (начиная с нуля): ")
+		} else {
+			fmt.Printf("%s игрок, введите номер строки "+
+				"и номер столбца (начиная с нуля): ", playerNum)
+		}
 		if _, err := fmt.Scan(&rowIdx, &colIdx); err != nil {
 			fmt.Println("Ошибка: Должны быть целые числа через пробел")
 		} else {
@@ -32,6 +36,18 @@ func (cli CliUserInteract) SetFieldSize() int {
 		size = 3
 	}
 	return size
+}
+
+func (cli CliUserInteract) IsVersusAI() bool {
+	var text string
+	fmt.Print("Против компьютера? (y/n): ")
+
+	_, _ = fmt.Scan(&text)
+
+	if text == "y" {
+		return true
+	}
+	return false
 }
 
 func (cli CliUserInteract) ShowError(err error) {
@@ -68,5 +84,9 @@ func (cli CliUserInteract) AskForRepeat() bool {
 }
 
 func (cli CliUserInteract) ShowTotalScore(msg string) {
+	fmt.Println(msg)
+}
+
+func (cli CliUserInteract) ShowMessage(msg string) {
 	fmt.Println(msg)
 }
